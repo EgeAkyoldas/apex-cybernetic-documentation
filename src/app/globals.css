@@ -1,0 +1,275 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 4%;
+    --foreground: 210 40% 95%;
+    --card: 240 10% 6%;
+    --card-foreground: 210 40% 95%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 210 40% 95%;
+    --primary: 189 100% 50%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 8% 12%;
+    --secondary-foreground: 210 40% 85%;
+    --muted: 240 8% 10%;
+    --muted-foreground: 210 20% 50%;
+    --accent: 155 100% 50%;
+    --accent-foreground: 240 10% 4%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 8% 14%;
+    --input: 240 8% 12%;
+    --ring: 189 100% 50%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    color: hsl(var(--foreground));
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #08080f;
+    background-image:
+      linear-gradient(rgba(0, 229, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 229, 255, 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    min-height: 100vh;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0d0d1a;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1a1a2e;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.3);
+  }
+}
+
+@layer components {
+  /* Cybernetic glow effects */
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.2), 0 0 40px rgba(0, 229, 255, 0.05);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.2), 0 0 40px rgba(0, 255, 136, 0.05);
+  }
+
+  .border-glow {
+    border-color: rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.1), inset 0 0 10px rgba(0, 229, 255, 0.02);
+  }
+
+  /* Glass morphism */
+  .glass {
+    background: rgba(13, 13, 26, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 229, 255, 0.1);
+  }
+
+  .glass-dark {
+    background: rgba(4, 4, 10, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Typing indicator dots */
+  .typing-dot:nth-child(1) { animation: typing-dot 1.2s ease-in-out infinite 0s; }
+  .typing-dot:nth-child(2) { animation: typing-dot 1.2s ease-in-out infinite 0.2s; }
+  .typing-dot:nth-child(3) { animation: typing-dot 1.2s ease-in-out infinite 0.4s; }
+
+  /* Markdown content styles */
+  .markdown-content {
+    font-size: 0.875rem;
+    line-height: 1.625;
+  }
+
+  .markdown-content h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #00e5ff;
+    margin-bottom: 1rem;
+    margin-top: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .markdown-content h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: #67e8f9;
+    margin-bottom: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  .markdown-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #a5f3fc;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .markdown-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin-bottom: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .markdown-content p {
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.75;
+  }
+
+  .markdown-content ul {
+    margin-bottom: 0.75rem;
+    padding-left: 1.25rem;
+    list-style: none;
+  }
+
+  .markdown-content ol {
+    margin-bottom: 0.75rem;
+    padding-left: 1.25rem;
+    list-style: decimal;
+  }
+
+  .markdown-content li {
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 0.25rem;
+  }
+
+  .markdown-content ul li::before {
+    content: '▸';
+    color: #00e5ff;
+    margin-right: 0.5rem;
+  }
+
+  .markdown-content code {
+    background: hsl(var(--secondary));
+    color: #67e8f9;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .markdown-content pre {
+    background: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+  }
+
+  .markdown-content pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 0.875rem;
+  }
+
+  .markdown-content blockquote {
+    border-left: 2px solid #00e5ff;
+    padding-left: 1rem;
+    font-style: italic;
+    color: hsl(var(--muted-foreground));
+    margin-bottom: 0.75rem;
+  }
+
+  .markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .markdown-content th {
+    background: hsl(var(--secondary));
+    color: #67e8f9;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .markdown-content td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid hsl(var(--border));
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .markdown-content tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .markdown-content a {
+    color: #00e5ff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s;
+  }
+
+  .markdown-content a:hover {
+    color: #67e8f9;
+  }
+
+  .markdown-content hr {
+    border-color: hsl(var(--border));
+    margin: 1.5rem 0;
+  }
+
+  .markdown-content strong {
+    color: hsl(var(--foreground));
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, #00e5ff, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
