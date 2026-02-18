@@ -13,6 +13,8 @@ const DOC_PURPOSE: Record<string, string> = {
   "API Spec": "Endpoint definitions, schemas, and authentication",
   "UI Design": "Design system, typography, color palette, and layouts",
   "Task List": "Nested implementation tasks with priorities",
+  "Security Spec": "Threat model, auth flows, data protection, and compliance",
+  "Data Model": "Entity definitions, relationships, indexing, and migrations",
   "Vibe Prompt": "AI-ready handoff prompt synthesizing all documents",
 };
 
@@ -26,6 +28,8 @@ const DOC_FILENAME: Record<string, string> = {
   "API Spec": "api-spec.md",
   "UI Design": "ui-design.md",
   "Task List": "task-list.md",
+  "Security Spec": "security-spec.md",
+  "Data Model": "data-model.md",
   "Vibe Prompt": "vibe-prompt.md",
 };
 

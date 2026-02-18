@@ -7,6 +7,10 @@ export const INSTRUCTION_FILES: Record<string, string> = {
   techspec: "tech-spec.yaml",
   roadmap: "roadmap.yaml",
   apispec: "api-spec.yaml",
+  uidesign: "ui-design.yaml",
+  tasklist: "task-list.yaml",
+  securityspec: "security-spec.yaml",
+  datamodel: "data-model.yaml",
   vibeprompt: "vibe-prompt.yaml",
 };
 
@@ -18,7 +22,9 @@ export const DOCUMENT_LABELS: Record<string, string> = {
   techspec: "Technical Specification",
   roadmap: "Project Roadmap",
   apispec: "API Specification",
-  vibeprompt: "Vibe Prompt",
+  uidesign: "UI Design",
+  tasklist: "Task List",
   securityspec: "Security Specification",
   datamodel: "Data Model",
+  vibeprompt: "Vibe Prompt",
 };
