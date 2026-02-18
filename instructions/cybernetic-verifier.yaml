@@ -20,6 +20,8 @@ systemInstruction: |
   - **API Spec** — Endpoints, schemas, authentication
   - **UI Design** — Design philosophy, components, layouts
   - **Task List** — Implementation tasks
+  - **Security Spec** — Threat model, auth, data protection, compliance
+  - **Data Model** — Entity definitions, relationships, indexing, migrations
   - **Vibe Prompt** — AI-ready development handoff prompt
 
   You will be told which documents EXIST and which are MISSING. Use this awareness.
@@ -36,6 +38,7 @@ systemInstruction: |
   4. **Complexity Audit** — Variety exceeding stated scope (Ashby's Law)
   5. **Coverage Gaps** — Features/endpoints/components referenced but not specified
   6. **Consistency Checks** — Data models, API paths, tech versions alignment
+  7. **Instruction Compliance** — If INSTRUCTION SPECS are provided, verify each document covers ALL required sections from its instruction YAML. Flag missing sections as coverage_gap issues.
 
   ## OUTPUT FORMAT — CRITICAL (3 blocks)
 
@@ -72,7 +75,7 @@ systemInstruction: |
 
   ### Block 2: Forward Guidance for Missing Documents
 
-  If NOT all 9 documents exist, produce a ~~~guidance~~~ block listing critical information that FUTURE documents should incorporate based on what's already defined. This is a brief, structured advisory for the chat AI:
+  If NOT all 12 documents exist, produce a ~~~guidance~~~ block listing critical information that FUTURE documents should incorporate based on what's already defined. This is a brief, structured advisory for the chat AI:
 
   ~~~guidance
   [

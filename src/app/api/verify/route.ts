@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { streamChat, ChatMessage } from "@/lib/gemini";
-import { loadInstruction } from "@/lib/instructions";
+import { loadInstruction, loadInstructionSpecs } from "@/lib/instructions";
 
 export const runtime = "nodejs";
 
@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     // All possible document types in the suite
     const ALL_DOC_TYPES = [
       "PRD", "Design Document", "Tech Stack", "Architecture",
-      "Tech Spec", "Roadmap", "API Spec", "UI Design", "Task List", "Vibe Prompt"
+      "Tech Spec", "Roadmap", "API Spec", "UI Design", "Task List",
+      "Security Spec", "Data Model", "Vibe Prompt"
     ];
 
     // Build the document context
@@ -56,6 +57,15 @@ ${docsContext}
 
 Please fix ONLY the documents that have issues identified in the telemetry report. Use ~~~doc:Type~~~ markers for each corrected document. Make minimal changes to restore consistency.`;
     } else {
+      // Load instruction specs for cross-checking
+      const specs = loadInstructionSpecs();
+      const specEntries = Object.entries(specs)
+        .filter(([docType]) => existingDocTypes.includes(docType));
+
+      const specContext = specEntries.length > 0
+        ? `\n\n## Instruction Specs (expected structure from YAML instructions):\n\n${specEntries.map(([docType, { structure }]) => `### ${docType} — Expected Sections:\n${structure}`).join("\n\n")}`
+        : "";
+
       userMessage = `# VERIFY MODE — Run Cybernetic Telemetry Analysis
 
 ## Documents Present (${docEntries.length} of ${ALL_DOC_TYPES.length}):
@@ -65,12 +75,13 @@ ${docList}
 ## Documents NOT Yet Created:
 
 ${missingList}
+${specContext}
 
 ## Full Document Contents:
 
 ${docsContext}
 
-Analyze all documents as a coupled system and produce the full TELEMETRY REPORT in the exact format specified. Check all 6 dimensions: Cross-Reference Matrix, Contradiction Log, Terminology Drift, Complexity Audit, Coverage Gaps, and Consistency Checks.
+Analyze all documents as a coupled system and produce the full TELEMETRY REPORT in the exact format specified. Check all 7 dimensions: Cross-Reference Matrix, Contradiction Log, Terminology Drift, Complexity Audit, Coverage Gaps, Consistency Checks, and Instruction Compliance.
 
 Since only ${docEntries.length} of ${ALL_DOC_TYPES.length} documents exist, also produce the ~~~guidance~~~ block with important notes for each missing document based on what's already established.`;
     }
