@@ -21,15 +21,19 @@ import {
 import { ChatMessage } from "@/lib/storage";
 import { parseDocumentBlocks, parseImageMarkers } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import {
+  DEFAULT_DOC_DEFINITIONS,
+  COLOR_MAP,
+  buildDocPrompt,
+  getEffectiveInstruction,
+  type DocDefinition,
+} from "@/lib/doc-definitions";
 
-// Builds a context-aware prompt for each doc type.
-// If the doc already exists → update/refine it.
-// If other docs exist → build upon them.
-// Otherwise → generate fresh.
-function buildDocPrompt(
+// Local buildDocPromptLocal wraps the shared buildDocPrompt with update/context logic
+function buildDocPromptLocal(
   docLabel: string,
   docKey: string,
-  baseInstruction: string,
+  instruction: string,
   existingDocs: Record<string, string>
 ): string {
   const alreadyExists = docKey in existingDocs;
@@ -42,102 +46,18 @@ function buildDocPrompt(
 - Fills in any gaps or missing detail
 - Remains fully consistent with all other documents in this session
 
-${baseInstruction}`;
+${instruction}`;
   }
 
-  if (otherDocs.length > 0) {
-    const docList = otherDocs.map((k) => `- ${k}`).join("\n");
-    return `Generate a complete ${docLabel} for this project. The following documents have already been created — use them as the authoritative source of truth and build upon them:
-${docList}
-
-Do NOT contradict or restart any decisions already made. Reference them explicitly where relevant.
-
-${baseInstruction}`;
-  }
-
-  return `Based on our conversation so far, ${baseInstruction}`;
+  return buildDocPrompt(docLabel, docKey, instruction, existingDocs);
 }
 
-const GUIDED_TOPICS: Record<string, string[]> = {
-  PRD: [
-    "Target users & personas",
-    "Core problem statement",
-    "Key features & scope",
-    "Success metrics / KPIs",
-    "Constraints & assumptions",
-    "Out of scope items",
-    "User stories / use cases",
-  ],
-  "Design Document": [
-    "System boundaries & context",
-    "Key trade-offs & decisions",
-    "Data flow overview",
-    "Technology constraints",
-    "Non-functional requirements",
-    "Risk assessment",
-  ],
-  "Tech Stack": [
-    "Frontend framework",
-    "Backend / runtime",
-    "Database type & choice",
-    "Authentication method",
-    "Hosting & deployment",
-    "Key libraries & tools",
-    "CI/CD preferences",
-    "Existing constraints",
-  ],
-  Architecture: [
-    "System type (monolith/micro/serverless)",
-    "Core components",
-    "Data flow & storage",
-    "External integrations",
-    "Scaling requirements",
-    "Security boundaries",
-  ],
-  "Tech Spec": [
-    "Core data models",
-    "Business logic rules",
-    "API style (REST/GraphQL/tRPC)",
-    "Error handling strategy",
-    "Validation rules",
-    "Performance requirements",
-    "Security considerations",
-  ],
-  Roadmap: [
-    "Number of phases",
-    "Timeline & deadlines",
-    "Team size & roles",
-    "Priority framework",
-    "MVP scope",
-    "Launch criteria",
-  ],
-  "API Spec": [
-    "API style (REST/GraphQL)",
-    "Authentication method",
-    "Core resources / endpoints",
-    "Versioning strategy",
-    "Rate limiting",
-    "Error response format",
-    "Pagination approach",
-  ],
-  "UI Design": [
-    "Design style & mood",
-    "Color palette preferences",
-    "Typography choices",
-    "Responsive strategy",
-    "Key screens / pages",
-    "Component library approach",
-    "Accessibility requirements",
-  ],
-  "Task List": [
-    "Sprint / phase structure",
-    "Priority system",
-    "Team allocation",
-    "Dependency ordering",
-    "Testing requirements",
-    "Definition of done",
-  ],
-};
+// Derive GUIDED_TOPICS lookup from shared definitions
+const GUIDED_TOPICS: Record<string, string[]> = Object.fromEntries(
+  DEFAULT_DOC_DEFINITIONS
+    .filter((d) => d.guidedTopics && d.guidedTopics.length > 0)
+    .map((d) => [d.docKey, d.guidedTopics!])
+);
 
 function buildGuidedPrompt(
   docLabel: string,
@@ -173,99 +93,7 @@ RULES:
 Start by asking the first question now.`;
 }
 
-const DOC_ACTIONS: Array<{
-  label: string;
-  docKey: string;
-  baseInstruction: string;
-  color: string;
-  guidedTopics?: string[];
-  buildPrompt: (existingDocs: Record<string, string>) => string;
-}> = [
-  {
-    label: "PRD",
-    docKey: "PRD",
-    baseInstruction: "generate a complete Product Requirements Document (PRD) for this project.",
-    color: "cyan",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "Design Doc",
-    docKey: "Design Document",
-    baseInstruction: "generate a complete Design Document covering system design, trade-offs, and key architectural decisions.",
-    color: "violet",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "Tech Stack",
-    docKey: "Tech Stack",
-    baseInstruction: "generate a complete Tech Stack Specification with technology choices and rationale.",
-    color: "emerald",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "Architecture",
-    docKey: "Architecture",
-    baseInstruction: "generate a complete Architecture Document using the C4 model.",
-    color: "amber",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "Tech Spec",
-    docKey: "Tech Spec",
-    baseInstruction: "generate a complete Technical Specification as an implementation blueprint.",
-    color: "rose",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "Roadmap",
-    docKey: "Roadmap",
-    baseInstruction: "generate a complete Project Roadmap with phases, milestones, and timelines.",
-    color: "sky",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "API Spec",
-    docKey: "API Spec",
-    baseInstruction: "generate a complete API Specification covering all endpoints, request/response schemas, and authentication.",
-    color: "orange",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "UI Design",
-    docKey: "UI Design",
-    baseInstruction: "generate a complete UI/UX Design Specification including design philosophy, color system, typography, component library, and screen layouts.",
-    color: "pink",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "Task List",
-    docKey: "Task List",
-    baseInstruction: "generate a comprehensive nested project task list with all phases, epics, stories, and implementation tasks — covering everything from project setup to launch.",
-    color: "green",
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-  {
-    label: "Vibe Prompt",
-    docKey: "Vibe Prompt",
-    baseInstruction: "generate a comprehensive Vibe Ready Prompt — a master AI handoff document that synthesizes ALL existing project documents into a single, actionable instruction file. This prompt will be given to an AI coding assistant to start building the project immediately. Include: project identity, document manifest, tech stack snapshot, architecture brief, core data models, phased implementation roadmap, development rules, expected file structure, bootstrap commands, and meta-instructions for the AI.",
-    color: "lime",
-    // No guidedTopics — Vibe Prompt is auto-only (synthesizes existing docs)
-    buildPrompt(d) { return buildDocPrompt(this.label, this.docKey, this.baseInstruction, d); },
-  },
-];
-
-const COLOR_MAP: Record<string, string> = {
-  cyan: "border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50",
-  violet: "border-violet-500/30 text-violet-400 hover:bg-violet-500/10 hover:border-violet-500/50",
-  emerald: "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50",
-  amber: "border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50",
-  rose: "border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/50",
-  sky: "border-sky-500/30 text-sky-400 hover:bg-sky-500/10 hover:border-sky-500/50",
-  orange: "border-orange-500/30 text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/50",
-  pink: "border-pink-500/30 text-pink-400 hover:bg-pink-500/10 hover:border-pink-500/50",
-  green: "border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/50",
-  lime: "border-lime-500/30 text-lime-400 hover:bg-lime-500/10 hover:border-lime-500/50",
-};
+// DOC_ACTIONS is just the shared definitions — prompt building uses customInstructions at call site
 
 
 export interface ChatPanelHandle {
@@ -277,6 +105,7 @@ interface ChatPanelProps {
   instructionKey: string;
   isStreaming: boolean;
   existingDocs: Record<string, string>;
+  customInstructions?: Record<string, string>;
   verifyReport?: string | null;
   onMessagesUpdate: (messages: ChatMessage[]) => void;
   onDocumentsUpdate: (docs: Record<string, string>) => void;
@@ -298,6 +127,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(
       instructionKey,
       isStreaming,
       existingDocs,
+      customInstructions,
       verifyReport,
       onMessagesUpdate,
       onDocumentsUpdate,
@@ -490,16 +320,17 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(
 
     const handleSend = useCallback(() => sendMessage(input), [input, sendMessage]);
     const handleDocAuto = useCallback(
-      (action: typeof DOC_ACTIONS[number]) => {
+      (action: DocDefinition) => {
         setGuidedSession(null);
         setOpenDropdown(null);
-        sendMessage(action.buildPrompt(existingDocs));
+        const instruction = getEffectiveInstruction(action, customInstructions);
+        sendMessage(buildDocPromptLocal(action.label, action.docKey, instruction, existingDocs));
       },
-      [sendMessage, existingDocs]
+      [sendMessage, existingDocs, customInstructions]
     );
 
     const handleDocGuided = useCallback(
-      (action: typeof DOC_ACTIONS[number]) => {
+      (action: DocDefinition) => {
         const topics = GUIDED_TOPICS[action.docKey] ?? [];
         setGuidedSession({ docType: action.docKey, totalTopics: topics.length, answeredCount: 0 });
         setOpenDropdown(null);
@@ -613,7 +444,7 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(
                 transition={{ duration: 0.15 }}
               >
                 <div className="px-4 pb-3 flex flex-wrap gap-2">
-                  {DOC_ACTIONS.map((action) => {
+                  {DEFAULT_DOC_DEFINITIONS.map((action) => {
                     const isCreated = action.docKey in existingDocs;
                     const hasGuided = action.docKey in GUIDED_TOPICS;
                     const isDropdownOpen = openDropdown === action.label;

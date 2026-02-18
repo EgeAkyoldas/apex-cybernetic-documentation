@@ -19,4 +19,6 @@ export const DOCUMENT_LABELS: Record<string, string> = {
   roadmap: "Project Roadmap",
   apispec: "API Specification",
   vibeprompt: "Vibe Prompt",
+  securityspec: "Security Specification",
+  datamodel: "Data Model",
 };

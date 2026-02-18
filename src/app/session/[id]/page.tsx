@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Zap, ChevronRight } from "lucide-react";
+import { ArrowLeft, Zap, ChevronRight, Settings } from "lucide-react";
 import { ChatPanel, ChatPanelHandle } from "@/components/ChatPanel";
 import { DocPreview } from "@/components/DocPreview";
+import { SessionSettings } from "@/components/SessionSettings";
 import { INITIAL_VERIFIER_STATE, VerifierState } from "@/components/VerifierPanel";
 import {
   getSession,
@@ -29,6 +30,7 @@ export default function SessionPage() {
   const [panelWidth, setPanelWidth] = useState(45);
   const [isDragging, setIsDragging] = useState(false);
   const [verifierState, setVerifierState] = useState<VerifierState>(INITIAL_VERIFIER_STATE);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const chatPanelRef = useRef<ChatPanelHandle>(null);
 
   useEffect(() => {
@@ -136,6 +138,18 @@ export default function SessionPage() {
     chatPanelRef.current?.prefillInput(`Regarding the "${sectionTitle}" section: `);
   }, []);
 
+  const handleCustomInstructionsUpdate = useCallback(
+    (customInstructions: Record<string, string>) => {
+      setSession((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev, customInstructions, updatedAt: Date.now() };
+        void saveSession(updated);
+        return updated;
+      });
+    },
+    []
+  );
+
   // Drag-to-resize
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -202,6 +216,13 @@ export default function SessionPage() {
                 Generating...
               </motion.div>
             )}
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              title="Session Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </header>
@@ -222,6 +243,7 @@ export default function SessionPage() {
             instructionKey={session.instructionKey}
             isStreaming={isStreaming}
             existingDocs={session.documents}
+            customInstructions={session.customInstructions}
             verifyReport={verifierState.rawReport || null}
             onMessagesUpdate={handleMessagesUpdate}
             onDocumentsUpdate={handleDocumentsUpdate}
@@ -256,6 +278,14 @@ export default function SessionPage() {
           />
         </div>
       </div>
+
+      {/* Session Settings */}
+      <SessionSettings
+        open={settingsOpen}
+        customInstructions={session.customInstructions ?? {}}
+        onClose={() => setSettingsOpen(false)}
+        onUpdate={handleCustomInstructionsUpdate}
+      />
     </div>
   );
 }

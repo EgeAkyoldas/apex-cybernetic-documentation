@@ -21,6 +21,7 @@ export interface Session {
   messages: ChatMessage[];
   documents: Record<string, string>;
   documentHistory: DocVersion[];
+  customInstructions?: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------
